@@ -19,9 +19,16 @@
     under the License.
  */
 
+ /*
+    Android API >= 27 Support by 
+    https://github.com/katzer/cordova-plugin-background-mode/pull/370/ and 
+    https://github.com/katzer/cordova-plugin-background-mode/pull/359
+ */
+
 package de.appplant.cordova.plugin.background;
 
 import android.annotation.TargetApi;
+import android.app.NotificationChannel;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -64,6 +71,10 @@ public class ForegroundService extends Service {
 
     // Partial wake lock to prevent the app from going to sleep when locked
     private PowerManager.WakeLock wakeLock;
+
+    // Notification channel
+    public static final String CHANNEL_ID = "cordova.plugins.backgroundMode.channel";
+    public static final String CHANNEL_NAME = "Background notification";
 
     /**
      * Allow clients to call on to the service.
@@ -167,6 +178,14 @@ public class ForegroundService extends Service {
                 .setContentText(text)
                 .setOngoing(true)
                 .setSmallIcon(getIconResId(settings));
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel chan = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, getNotificationManager().IMPORTANCE_HIGH);
+            chan.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            getNotificationManager().createNotificationChannel(chan);
+
+            notification.setChannelId(CHANNEL_ID);
+        }
 
         if (settings.optBoolean("hidden", true)) {
             notification.setPriority(Notification.PRIORITY_MIN);
